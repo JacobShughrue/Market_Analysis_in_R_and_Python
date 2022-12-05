@@ -1,0 +1,171 @@
+---
+title: "An Analysis of NASDAQ market data in Facebook's Prophet"
+output: html_notebook
+authors: Jacob Shughrue
+---
+
+### Setup
+
+```{r setup}
+library(tidyverse)
+library(xts)
+library(tidyquant)
+library(PerformanceAnalytics)
+library(PortfolioAnalytics)
+library(data.table)
+library(prophet)
+library(quantmod)
+library(lubridate)
+library(tidymodels)
+```
+
+### Grab data from Yahoo Finance
+
+```{r}
+## Get QQQ NASDAQ market data from 1975 through today data 
+
+# read_csv("Data/^GSPC.csv") # get data via CSV 
+
+ getSymbols('QQQ', from = 1999-03-11, to = Sys.Date() + 1,warnings = FALSE,
+           auto.assign = TRUE, src = "yahoo")  # read data via getSymbols 
+
+df <- QQQ # rename the df 
+
+df <- as.data.frame(df) # convert from xts to df
+df$Date <- rownames(df) 
+
+rownames(df) <- NULL # reset index column 
+
+colnames(df) <-c("Open", "High","Low","Close","Volume","Adjusted","Date") # Modify column names
+
+df <- subset(df, select=-c(High,Low)) # remove 'High' and 'Low' columns from the df
+```
+
+### Times Where S&P Closed at least 7% Higher than Open or Closed at least 7% Lower than Open
+
+```{r}
+df %>%
+  filter(df$Close/df$Open > 1.07) # times the market closed 5% lower
+
+
+df %>%
+  filter(df$Open/df$Close > 1.07) # times the market has closed 5% higher
+
+```
+
+### Forecasting Future Returns
+
+```{r}
+df_Date_N_Close<- df %>%
+  select(Date,Close)
+
+names(df_Date_N_Close) <- c("ds","y") # name date and close columns in df_Date_N_Close
+
+prophet(df_Date_N_Close)
+
+m2<-prophet(df_Date_N_Close, weekly.seasonality =FALSE)
+
+future <- make_future_dataframe(m2, periods = 3650) # run for a period of 10 years
+
+#tail(future)
+
+forecast <- predict(m2, future)
+
+#tail(forecast[c('ds', 'yhat', 'yhat_lower', #'yhat_upper')])
+
+```
+
+Here we used the machine learning package "Prophet" to begin to forecast the future of the stock market via additive regression models.
+
+### Plotting Next 10 Years
+
+```{r}
+plot(m2, forecast)
+```
+### Plotting Tends of Markets By Year, Month, and Day with Future Outlook
+```{r}
+prophet_plot_components(m2, forecast)
+```
+
+
+One can see a large dip in the month of October when the data in aggregate was analyzed. This is in accordance with the "October Effect" which is a perceived market anomaly where stocks dip during the month. It is generally understood that this dip is due to the psychological expectation rather than a legitimate statistical phenomenon (ex. investors may be nervous due to some of histories largest market crashes ever occurring in the month).
+
+```{r}
+#Begin trimming from 1980 to just 2005 - 2025
+
+ df_Date_N_Close_Since_2005<- setDT(df_Date_N_Close)[ds %between% c('2005-01-01', '2025-01-01')]
+                             
+
+names(df_Date_N_Close_Since_2005) <- c("ds","y")
+
+prophet(df_Date_N_Close_Since_2005)
+
+m3<-prophet(df_Date_N_Close_Since_2005, weekly.seasonality = FALSE)
+
+future <- make_future_dataframe(m3, periods = 1825) # 5 year view
+# tail(future)
+
+forecast <- predict(m3, future)
+# tail(forecast[c('ds', 'yhat', 'yhat_lower', 'yhat_upper')])
+
+
+```
+
+
+### Graphing Potential for Markets over next 10 Years
+```{r}
+plot(m3, forecast)
+```
+
+```{r}
+prophet_plot_components(m3, forecast)
+```
+
+```{r}
+#Begin trimming from 1980 to just March 2018 - March 2020
+
+
+
+ df_Date_N_Close_Since_2005<- setDT(df_Date_N_Close)[ds %between% c('2018-03-01', '2023-03-01')]
+                             
+
+
+
+names(df_Date_N_Close_Since_2005) <- c("ds","y")
+
+prophet(df_Date_N_Close_Since_2005)
+
+m4<-prophet(df_Date_N_Close_Since_2005, weekly.seasonality = FALSE)
+
+future <- make_future_dataframe(m4, periods = 365) # 1 year prediction
+# tail(future)
+
+forecast <- predict(m4, future)
+# tail(forecast[c('ds', 'yhat', 'yhat_lower', 'yhat_upper')])
+```
+
+```{r}
+plot(m4, forecast)
+```
+
+
+```{r}
+ prophet_plot_components(m4, forecast)
+```
+
+
+Works Cited:
+
+Hayes, A. (n.d.). October Effect Definition. Retrieved May 13, 2019, from Investopedia website: https://www.investopedia.com/terms/o/octobereffect.asp
+
+how to forecast the ‘yhat_upper’ and ‘yhat_lower’ in Prophet? · Issue #637 · facebook/prophet. (n.d.). Retrieved May 13, 2019, from GitHub website: https://github.com/facebook/prophet/issues/637
+
+Prophet: forecasting at scale. (2017, February 23). Retrieved May 13, 2019, from Facebook Research website: https://research.fb.com/prophet-forecasting-at-scale/
+
+Quick Start. (n.d.). Retrieved May 13, 2019, from Prophet website: http://facebook.github.io/prophet/docs/quick_start.html
+R: How to filter/subset a sequence of dates. (n.d.). Retrieved May 13, 2019, from Stack Overflow website: https://stackoverflow.com/questions/28335715/r-how-to-filter-subset-a-sequence-of-dates
+
+Tool for producing high quality forecasts for time series data that has multiple seasonality with linear or non-linear growth.: facebook/prophet [Python]. (2019). Retrieved from https://github.com/facebook/prophet (Original work published 2016)
+
+
+
