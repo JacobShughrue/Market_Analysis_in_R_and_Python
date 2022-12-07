@@ -22,7 +22,7 @@ library(tidymodels)
 ### Grab data from Yahoo Finance
 
 ```{r}
-## Get QQQ NASDAQ market data from 1975 through today data 
+## Get QQQ NASDAQ market data from 1975 through today
 
 # read_csv("Data/^GSPC.csv") # get data via CSV 
 
@@ -36,7 +36,7 @@ df$Date <- rownames(df)
 
 rownames(df) <- NULL # reset index column 
 
-colnames(df) <-c("Open", "High","Low","Close","Volume","Adjusted","Date") # Modify column names
+colnames(df) <- c("Open", "High","Low","Close","Volume","Adjusted","Date") # Modify column names
 
 df <- subset(df, select=-c(High,Low)) # remove 'High' and 'Low' columns from the df
 ```
@@ -126,7 +126,7 @@ prophet_plot_components(m3, forecast)
 
 
 
- df_Date_N_Close_Since_2005<- setDT(df_Date_N_Close)[ds %between% c('2018-03-01', '2023-03-01')]
+ df_Date_N_Close_Since_2005 <- setDT(df_Date_N_Close)[ds %between% c('2018-03-01', '2023-03-01')]
                              
 
 
