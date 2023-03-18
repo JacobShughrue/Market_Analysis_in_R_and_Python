@@ -7,4 +7,4 @@ While I originally authored this R markdown file in 2019, I plan to rewrite this
 ### File Glossary
 **1. NASDAQ_Market_Analysis_in_R.Rmd** - this R markdown file contains my original code froom 2019 - it pulls directly from Yahoo Finance.
 
-**Market_Analysis_in_Python.py** - This file is in development. Upon completion it will feature a freshly tuned model written in Python rather than R.
+**2. Market_Analysis_in_Python.py** - This file is in development. Upon completion it will feature a freshly tuned model written in Python rather than R.
